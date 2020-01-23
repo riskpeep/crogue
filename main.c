@@ -11,6 +11,7 @@
 #include <stdint.h>   /* For uintxx_t types */
 
 #include "game.h"
+#include "console.h"
 #include "texture.h"
 
 /* Screen dimension constants 
@@ -38,12 +39,24 @@ bool cr_loadMedia( cr_game_t* theGame );
  */
 void cr_close( cr_game_t *theGame );
 
+/* Renders a console to the the screen using tile set glyphs
+ */
+void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Renderer *renderer );
+
 bool cr_init( cr_game_t *theGame )
 {
     int imgFlags;
 
     /* Initialization flag */
     bool success = true;
+
+    /* Initialize the console */
+    theGame->console = rk_console_init( 16, 16 );
+
+    if( theGame->console == NULL ) {
+        printf( "Coule not initialize the console!\n" );
+        success = false;
+    }
 
     /* Initialize SDL */
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -134,16 +147,16 @@ bool cr_loadMedia( cr_game_t* theGame )
     bool success = true;
 
     /* Load splash image */
-    theGame->helloTexture = rk_texture_create();
-    if( theGame->helloTexture == NULL ) {
-        printf( "Unable to load image %s! SDL Error: %s\n", "assets/hello.png", SDL_GetError() );
+    theGame->tileSet = rk_texture_create();
+    if( theGame->tileSet == NULL ) {
+        printf( "Unable to load image %s! SDL Error: %s\n", "assets/Spacefox_16x16.png", SDL_GetError() );
         success = false;
     } else {
-        if( !rk_texture_loadFromFile( theGame->helloTexture, theGame->renderer, "assets/hello.png" ) ) {
+        if( !rk_texture_loadFromFile( theGame->tileSet, theGame->renderer, "assets/Spacefox_16x16.png" ) ) {
             /*Failed - Clean up and return false */
-            rk_texture_destroy( theGame->helloTexture );
+            rk_texture_destroy( theGame->tileSet );
 
-            printf( "Unable to load image %s! SDL Error: %s\n", "Spacefox_16x16.bmp", SDL_GetError() );
+            printf( "Unable to load image %s! SDL Error: %s\n", "assets/Spacefox_16x16.bmp", SDL_GetError() );
             success = false;
         } /* else */
             /* Success */
@@ -155,8 +168,8 @@ bool cr_loadMedia( cr_game_t* theGame )
 void cr_close( cr_game_t *theGame )
 {
     /* Deallocate surface */
-    rk_texture_destroy( theGame->helloTexture );
-    theGame->helloTexture = NULL;
+    rk_texture_destroy( theGame->tileSet );
+    theGame->tileSet = NULL;
 
     /* Destroy window */
     SDL_DestroyWindow( theGame->window );
@@ -164,7 +177,68 @@ void cr_close( cr_game_t *theGame )
 
     /* Quit SDL subsystems */
     SDL_Quit();
+
+    /* Clean up the console */
+    rk_console_destroy( theGame->console );
+    theGame->console = NULL;
+
+    return;
 }
+
+void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Renderer *renderer ) {
+
+    /* Loop iterators */
+    uint16_t iter_height;
+    uint16_t iter_width;
+    SDL_Rect src_rect;
+    SDL_Rect dst_rect;
+    uint16_t TILE_SIZE = 16;
+    uint8_t glyph;
+
+    /* Console information */
+    const uint16_t c_height = rk_console_height( console );
+    const uint16_t c_width = rk_console_width( console );
+    const rk_tile_t *c_tiles = rk_console_tiles( console );
+
+    /* Setup our source and destination rects */
+    src_rect.x = 0;
+    src_rect.y = 0;
+    src_rect.w = TILE_SIZE;
+    src_rect.h = TILE_SIZE;
+
+    /* Setup our source and destination rects */
+    dst_rect.x = 0;
+    dst_rect.y = 0;
+    dst_rect.w = SCREEN_WIDTH / 16;
+    dst_rect.h = SCREEN_HEIGHT/ 16;
+
+    /* Iterate the glyphs */
+    for( iter_height = 0; iter_height < c_height; iter_height++ ) {
+        for( iter_width = 0; iter_width < c_width; iter_width++ ) {
+            glyph = c_tiles[ iter_height * c_height + iter_width ].glyph;
+            /*glyph = (iter_height * c_height) + iter_width;*/
+
+            /* Do some mojo for the src rect to get the right glyph */
+            src_rect.x = glyph % 16 * TILE_SIZE;
+            src_rect.y = ((uint8_t)(glyph) / 16) * TILE_SIZE;
+
+            /* Do some mojo for the dst rect to put it in the right place */
+            /* For now just wing it */
+            dst_rect.x = iter_width * (SCREEN_WIDTH / 16);
+            dst_rect.y = iter_height * (SCREEN_HEIGHT / 16);
+
+            /*printf("%u, Loc %u,%u is src %u,%u\n", glyph, iter_height, iter_width, src_rect.x, src_rect.y);
+            printf("Loc %u,%u is dst %u,%u\n", iter_height, iter_width, dst_rect.x, dst_rect.y);
+            fflush(stdout); */
+
+            /* Render each glyph to the renderer */
+            rk_texture_render( tileSet, renderer, 0, 0, &src_rect, &dst_rect );
+        }
+    }
+
+    return;
+}
+
 
 int main( int argc, char* args[])
 {
@@ -174,7 +248,8 @@ int main( int argc, char* args[])
     /* Initialize the game */
     theGame.window = NULL;
     theGame.screenSurface = NULL;
-    theGame.helloTexture = NULL;
+    theGame.tileSet = NULL;
+    theGame.console = NULL;
 
     /* Start up SDL and create window */
     if( !cr_init( &theGame ) ) {
@@ -205,7 +280,7 @@ int main( int argc, char* args[])
                 SDL_RenderClear( theGame.renderer );
 
                 /* Render texture to screen */
-                rk_texture_render( theGame.helloTexture, theGame.renderer, 0, 0, NULL, NULL );
+                rk_texture_render( theGame.tileSet, theGame.renderer, 0, 0, NULL, NULL );
 
                 /* Update screen */
                 SDL_RenderPresent( theGame.renderer );

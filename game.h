@@ -10,6 +10,7 @@
 
 #include <SDL2/SDL.h>
 
+#include "console.h"
 #include "texture.h"
 
 /*****************************************************************************
@@ -31,9 +32,13 @@ typedef struct cr_game_t {
     */
     SDL_Surface* screenSurface;
 
-    /* The texture we will load and show on the screen
+    /* The tileSet we will load and show on the screen
     */
-    rk_texture_t* helloTexture;
+    rk_texture_t* tileSet;
+
+    /* The console we draw our glyphs into
+     */
+    rk_console_t* console;
 
 } cr_game_t;
 
