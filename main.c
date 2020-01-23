@@ -10,33 +10,13 @@
 #include <stdbool.h>  /* For bool, true, and false */
 #include <stdint.h>   /* For uintxx_t types */
 
+#include "game.h"
 #include "texture.h"
 
 /* Screen dimension constants 
  */
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-
-/* The Game
- */
-typedef struct cr_game_t {
-    /* The window we'll be rendering to
-    */
-    SDL_Window* window;
-
-    /* The renderer we'll use for accelerated rendering
-     */
-    SDL_Renderer* renderer;
-
-    /* The surface contained by the window
-    */
-    SDL_Surface* screenSurface;
-
-    /* The texture we will load and show on the screen
-    */
-    rk_texture_t* helloTexture;
-
-} cr_game_t;
 
 /* Starts up SDL and creates window
  */
