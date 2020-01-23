@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = main.c console.c texture.c
+OBJS = main.c console.c texture.c util.c
 
 #CC specifies which compiler we'll be using
 CC = gcc

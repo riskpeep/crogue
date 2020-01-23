@@ -13,6 +13,7 @@
 #include "game.h"
 #include "console.h"
 #include "texture.h"
+#include "util.h"
 
 /* Screen dimension constants 
  */
@@ -259,6 +260,9 @@ int main( int argc, char* args[])
         if( !cr_loadMedia( &theGame ) ) {
             printf( "Failed to load media!\n" );
         } else {
+            /* Make some dummy data */
+            cr_dummy_data( &theGame );
+
             /* Main loop flag */
             bool quit = false;
 
@@ -279,8 +283,11 @@ int main( int argc, char* args[])
                 SDL_SetRenderDrawColor( theGame.renderer, 0xFF, 0xFF, 0xFF, 0xFF );
                 SDL_RenderClear( theGame.renderer );
 
+                /* Render console to screen */
+                cr_render_console( theGame.console, theGame.tileSet, theGame.renderer );
+
                 /* Render texture to screen */
-                rk_texture_render( theGame.tileSet, theGame.renderer, 0, 0, NULL, NULL );
+                /*rk_texture_render( theGame.tileSet, theGame.renderer, 0, 0, NULL, NULL );*/
 
                 /* Update screen */
                 SDL_RenderPresent( theGame.renderer );
