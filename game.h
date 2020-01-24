@@ -24,6 +24,14 @@ typedef struct cr_game_t {
     */
     SDL_Window* window;
 
+    /* Window info
+    */
+    bool isMinimized;
+    bool isMaximized;
+    bool hasFocus;
+    uint16_t wHeight;
+    uint16_t wWidth;
+
     /* The renderer we'll use for accelerated rendering
      */
     SDL_Renderer* renderer;

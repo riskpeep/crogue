@@ -54,7 +54,7 @@ void cr_close( cr_game_t *theGame );
 
 /* Renders a console to the the screen using tile set glyphs
  */
-void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Renderer *renderer );
+void cr_render_console( cr_game_t *theGame );
 
 bool cr_init( cr_game_t *theGame )
 {
@@ -81,8 +81,8 @@ bool cr_init( cr_game_t *theGame )
         /* Create window */
         theGame->window = SDL_CreateWindow( "Crogue Game", 
                 SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-                SCREEN_WIDTH, SCREEN_HEIGHT,
-                SDL_WINDOW_SHOWN );
+                theGame->wWidth, theGame->wHeight,
+                SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
         if( theGame->window == NULL ) {
             printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
             success = false;
@@ -200,7 +200,7 @@ void cr_close( cr_game_t *theGame )
     return;
 }
 
-void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Renderer *renderer ) {
+void cr_render_console( cr_game_t *theGame ) {
 
     /* Loop iterators */
     uint16_t i_height;
@@ -211,23 +211,21 @@ void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Render
     uint8_t glyph;
 
     /* Console information */
-    const uint16_t c_height = rk_console_height( console );
-    const uint16_t c_width = rk_console_width( console );
-    const rk_tile_t *c_tiles = rk_console_tiles( console );
+    const uint16_t c_height = rk_console_height( theGame->console );
+    const uint16_t c_width = rk_console_width( theGame->console );
+    const rk_tile_t *c_tiles = rk_console_tiles( theGame->console );
 
     /* Setup our source and destination rects */
     src_rect.x = 0;
     src_rect.y = 0;
     src_rect.w = tile_size;
     src_rect.h = tile_size;
-    printf("Src rect %u x %u\n", src_rect.h, src_rect.w );
 
     /* Setup our source and destination rects */
     dst_rect.x = 0;
     dst_rect.y = 0;
-    dst_rect.w = SCREEN_WIDTH / c_width;
-    dst_rect.h = SCREEN_HEIGHT / c_height;
-    printf("Dst rect %u x %u\n", dst_rect.h, dst_rect.w );
+    dst_rect.w = theGame->wWidth / c_width;
+    dst_rect.h = theGame->wHeight / c_height;
 
 
     /* Iterate the glyphs */
@@ -242,15 +240,15 @@ void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Render
 
             /* Do some mojo for the dst rect to put it in the right place */
             /* For now just wing it */
-            dst_rect.x = i_width * (SCREEN_WIDTH / c_width);
-            dst_rect.y = i_height * (SCREEN_HEIGHT / c_height);
+            dst_rect.x = i_width * (theGame->wWidth / c_width);
+            dst_rect.y = i_height * (theGame->wHeight / c_height);
 
-            printf("%u, Loc %u,%u is src %u,%u\n", glyph, i_height, i_width, src_rect.x, src_rect.y);
-            /*printf("Loc %u,%u is dst %u,%u\n", i_height, i_width, dst_rect.x, dst_rect.y);
+            /*printf("%u, Loc %u,%u is src %u,%u\n", glyph, i_height, i_width, src_rect.x, src_rect.y);
+            printf("Loc %u,%u is dst %u,%u\n", i_height, i_width, dst_rect.x, dst_rect.y);
             fflush(stdout); */
 
             /* Render each glyph to the renderer */
-            rk_texture_render( tileSet, renderer, 0, 0, &src_rect, &dst_rect );
+            rk_texture_render( theGame->tileSet, theGame->renderer, 0, 0, &src_rect, &dst_rect );
         }
     }
 
@@ -265,6 +263,12 @@ int main( int argc, char* args[])
 
     /* Initialize the game */
     theGame.window = NULL;
+    theGame.isMinimized = false;
+    theGame.isMaximized = false;
+    theGame.hasFocus = true;
+    theGame.wHeight = SCREEN_HEIGHT;
+    theGame.wWidth = SCREEN_WIDTH;
+
     theGame.screenSurface = NULL;
     theGame.tileSet = NULL;
     theGame.console = NULL;
@@ -290,9 +294,46 @@ int main( int argc, char* args[])
             while( !quit ) {
                 /* Handle events on queue */
                 while( SDL_PollEvent( &e ) != 0 ) {
-                    /* User requests quit */
-                    if( e.type == SDL_QUIT ) {
-                        quit = true;
+
+                    switch( e.type ) {
+                        case SDL_QUIT:
+                            quit = true;
+                            break;
+
+                        case SDL_WINDOWEVENT:
+                            /* TODO this is an embarassment, move this somewhere else you clown */
+                            switch( e.window.event ) {
+                                /* Resize canvas on resize */
+                                case SDL_WINDOWEVENT_SIZE_CHANGED:
+                                    theGame.wWidth = e.window.data1;
+                                    theGame.wHeight = e.window.data2;
+                                    /* TODO Get new size */
+                                    SDL_RenderPresent( theGame.renderer );
+                                    break;
+
+                                /* Repaint on exposure */
+                                case SDL_WINDOWEVENT_EXPOSED:
+                                    SDL_RenderPresent( theGame.renderer );
+                                    break;
+
+                                /* Window Minimized */
+                                case SDL_WINDOWEVENT_MINIMIZED:
+                                    /* TODO */
+                                    break;
+
+                                /* Window Maximized */
+                                case SDL_WINDOWEVENT_MAXIMIZED:
+                                    /* TODO Get new size */
+                                    SDL_RenderPresent( theGame.renderer );
+                                    break;
+
+                                /* Window Restored */
+                                case SDL_WINDOWEVENT_RESTORED:
+                                    /* TODO Get new size */
+                                    SDL_RenderPresent( theGame.renderer );
+                                    break;
+                            }
+                            break;
                     }
                 }
 
@@ -301,15 +342,10 @@ int main( int argc, char* args[])
                 SDL_RenderClear( theGame.renderer );
 
                 /* Render console to screen */
-                cr_render_console( theGame.console, theGame.tileSet, theGame.renderer );
-
-                /* Render texture to screen */
-                /*rk_texture_render( theGame.tileSet, theGame.renderer, 0, 0, NULL, NULL );*/
+                cr_render_console( &theGame );
 
                 /* Update screen */
                 SDL_RenderPresent( theGame.renderer );
-
-/*                exit(0);*/
             }
         }
     }
