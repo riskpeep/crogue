@@ -41,7 +41,7 @@ rk_texture_t *rk_texture_create();
 void rk_texture_destroy( rk_texture_t *texture );
 
 /* Loads an image at the specified path */
-bool rk_texture_loadFromFile( rk_texture_t *theTexture, SDL_Renderer* theRenderer, char* path );
+bool rk_texture_loadFromFile( rk_texture_t *theTexture, SDL_Renderer* theRenderer, const char* path );
 
 /* Deallocates memory */
 void rk_texture_free( rk_texture_t *theTexture );

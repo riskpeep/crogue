@@ -20,6 +20,18 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+/* Console dimension constants
+ */
+const uint16_t DEFAULT_HEIGHT = 24;
+const uint16_t DEFAULT_WIDTH = 80;
+
+/* Tileset defaults
+ */
+const int TILE_SIZE = 16;
+const char TILE_SET[] = "assets/Spacefox_16x16.png";
+const char TILE_SET_GLYPHS_WIDE = 16;
+const char TILE_SET_GLYPHS_HIGH = 16;
+
 /* Starts up SDL and creates window
  */
 bool cr_init( cr_game_t *theGame );
@@ -52,7 +64,8 @@ bool cr_init( cr_game_t *theGame )
     bool success = true;
 
     /* Initialize the console */
-    theGame->console = rk_console_init( 16, 16 );
+    theGame->console = rk_console_init( DEFAULT_HEIGHT, 
+                                        DEFAULT_WIDTH );
 
     if( theGame->console == NULL ) {
         printf( "Coule not initialize the console!\n" );
@@ -64,10 +77,11 @@ bool cr_init( cr_game_t *theGame )
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         success = false;
     } else {
+        printf("Creating window %u x %u\n", DEFAULT_HEIGHT * TILE_SIZE, DEFAULT_WIDTH * TILE_SIZE );
         /* Create window */
         theGame->window = SDL_CreateWindow( "Crogue Game", 
                 SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-                SCREEN_WIDTH, SCREEN_HEIGHT, 
+                SCREEN_WIDTH, SCREEN_HEIGHT,
                 SDL_WINDOW_SHOWN );
         if( theGame->window == NULL ) {
             printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -150,14 +164,14 @@ bool cr_loadMedia( cr_game_t* theGame )
     /* Load splash image */
     theGame->tileSet = rk_texture_create();
     if( theGame->tileSet == NULL ) {
-        printf( "Unable to load image %s! SDL Error: %s\n", "assets/Spacefox_16x16.png", SDL_GetError() );
+        printf( "Unable to load image %s! SDL Error: %s\n", TILE_SET, SDL_GetError() );
         success = false;
     } else {
-        if( !rk_texture_loadFromFile( theGame->tileSet, theGame->renderer, "assets/Spacefox_16x16.png" ) ) {
+        if( !rk_texture_loadFromFile( theGame->tileSet, theGame->renderer, TILE_SET ) ) {
             /*Failed - Clean up and return false */
             rk_texture_destroy( theGame->tileSet );
 
-            printf( "Unable to load image %s! SDL Error: %s\n", "assets/Spacefox_16x16.bmp", SDL_GetError() );
+            printf( "Unable to load image %s! SDL Error: %s\n", TILE_SET, SDL_GetError() );
             success = false;
         } /* else */
             /* Success */
@@ -189,11 +203,11 @@ void cr_close( cr_game_t *theGame )
 void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Renderer *renderer ) {
 
     /* Loop iterators */
-    uint16_t iter_height;
-    uint16_t iter_width;
+    uint16_t i_height;
+    uint16_t i_width;
     SDL_Rect src_rect;
     SDL_Rect dst_rect;
-    uint16_t TILE_SIZE = 16;
+    uint16_t tile_size = TILE_SIZE;
     uint8_t glyph;
 
     /* Console information */
@@ -204,32 +218,35 @@ void cr_render_console( rk_console_t *console, rk_texture_t *tileSet, SDL_Render
     /* Setup our source and destination rects */
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.w = TILE_SIZE;
-    src_rect.h = TILE_SIZE;
+    src_rect.w = tile_size;
+    src_rect.h = tile_size;
+    printf("Src rect %u x %u\n", src_rect.h, src_rect.w );
 
     /* Setup our source and destination rects */
     dst_rect.x = 0;
     dst_rect.y = 0;
-    dst_rect.w = SCREEN_WIDTH / 16;
-    dst_rect.h = SCREEN_HEIGHT/ 16;
+    dst_rect.w = SCREEN_WIDTH / c_width;
+    dst_rect.h = SCREEN_HEIGHT / c_height;
+    printf("Dst rect %u x %u\n", dst_rect.h, dst_rect.w );
+
 
     /* Iterate the glyphs */
-    for( iter_height = 0; iter_height < c_height; iter_height++ ) {
-        for( iter_width = 0; iter_width < c_width; iter_width++ ) {
-            glyph = c_tiles[ iter_height * c_height + iter_width ].glyph;
-            /*glyph = (iter_height * c_height) + iter_width;*/
+    for( i_height = 0; i_height < c_height; i_height++ ) {
+        for( i_width = 0; i_width < c_width; i_width++ ) {
+            glyph = c_tiles[ i_height * c_width + i_width ].glyph;
+            /*glyph = (i_height * c_width) + i_width;*/
 
             /* Do some mojo for the src rect to get the right glyph */
-            src_rect.x = glyph % 16 * TILE_SIZE;
-            src_rect.y = ((uint8_t)(glyph) / 16) * TILE_SIZE;
+            src_rect.x = glyph % TILE_SET_GLYPHS_WIDE * tile_size;
+            src_rect.y = ((uint8_t)(glyph) / TILE_SET_GLYPHS_WIDE) * tile_size;
 
             /* Do some mojo for the dst rect to put it in the right place */
             /* For now just wing it */
-            dst_rect.x = iter_width * (SCREEN_WIDTH / 16);
-            dst_rect.y = iter_height * (SCREEN_HEIGHT / 16);
+            dst_rect.x = i_width * (SCREEN_WIDTH / c_width);
+            dst_rect.y = i_height * (SCREEN_HEIGHT / c_height);
 
-            /*printf("%u, Loc %u,%u is src %u,%u\n", glyph, iter_height, iter_width, src_rect.x, src_rect.y);
-            printf("Loc %u,%u is dst %u,%u\n", iter_height, iter_width, dst_rect.x, dst_rect.y);
+            printf("%u, Loc %u,%u is src %u,%u\n", glyph, i_height, i_width, src_rect.x, src_rect.y);
+            /*printf("Loc %u,%u is dst %u,%u\n", i_height, i_width, dst_rect.x, dst_rect.y);
             fflush(stdout); */
 
             /* Render each glyph to the renderer */
@@ -291,6 +308,8 @@ int main( int argc, char* args[])
 
                 /* Update screen */
                 SDL_RenderPresent( theGame.renderer );
+
+/*                exit(0);*/
             }
         }
     }

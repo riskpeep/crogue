@@ -32,6 +32,15 @@ rk_console_t *rk_console_init( uint16_t height, uint16_t width ) {
         return NULL;
     }
 
+    /* Did we get good sizes */
+    if(( height == 0 ) || ( width == 0 )) {
+        /* No, use the defaults */
+        height = RK_CONSOLE_DEFAULT_WIDTH;
+        width = RK_CONSOLE_DEFAULT_HEIGHT;
+    }
+
+    printf("Height = %u, Width = %u\n", height, width);
+
     /* Success - Initialize the members */
     newConsole->height = height;
     newConsole->width = width;

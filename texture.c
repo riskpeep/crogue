@@ -61,7 +61,7 @@ void rk_texture_destroy( rk_texture_t *theTexture ) {
 
 /* Loads an image at the specified path
  */
-bool rk_texture_loadFromFile( rk_texture_t *theTexture, SDL_Renderer *theRenderer, char* path ) {
+bool rk_texture_loadFromFile( rk_texture_t *theTexture, SDL_Renderer *theRenderer, const char* path ) {
 
     /* The final texture */
     SDL_Texture* newTexture = NULL;
