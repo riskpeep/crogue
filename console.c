@@ -94,3 +94,26 @@ rk_tile_t* rk_console_tiles( rk_console_t *console ) {
     return console->tileArray;
 }
 
+/* Writes text on the console
+ */
+bool rk_console_write( rk_console_t* console, const uint16_t posX, const uint16_t posY, const char *textString ) {
+    bool success = false;
+    size_t textLen = 0;
+    size_t textIter = 0;
+
+    /* How long is the string? */
+    textLen = strlen( textString );
+
+    /* Is the location valid? */
+    if((( posX + textLen ) > console->width ) || ( posY > console->height )) {
+        success = false;
+    } else {
+        /* Write the string */
+        for( textIter = 0; textIter < textLen; textIter++ ) {
+            console->tileArray[( posX + textIter ) + ( posY * console->width )].glyph = textString[ textIter ];
+        }
+    }
+
+    return success;
+}
+

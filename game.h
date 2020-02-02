@@ -48,6 +48,11 @@ typedef struct cr_game_t {
      */
     rk_console_t* console;
 
+    /* The player position
+     */
+    uint16_t playerPosX;
+    uint16_t playerPosY;
+
 } cr_game_t;
 
 #endif /* !RK_GAME_H */

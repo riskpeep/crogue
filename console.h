@@ -70,4 +70,10 @@ const uint16_t rk_console_width( rk_console_t *console );
  */
 rk_tile_t* rk_console_tiles( rk_console_t *console );
 
+/* Writes text on the console
+ *
+ * @return Success
+ */
+bool rk_console_write( rk_console_t *console, const uint16_t posX, const uint16_t posY, const char *textString );
+
 #endif /* !RK_CONSOLE_H */

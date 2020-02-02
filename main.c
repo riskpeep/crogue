@@ -10,6 +10,7 @@
 #include <stdbool.h>  /* For bool, true, and false */
 #include <stdint.h>   /* For uintxx_t types */
 
+#include "constants.h"
 #include "game.h"
 #include "console.h"
 #include "texture.h"
@@ -284,6 +285,13 @@ int main( int argc, char* args[])
             /* Make some dummy data */
             cr_dummy_data( &theGame );
 
+            rk_console_write( theGame.console, 2, 2, CR_WELCOME_MESSAGE );
+
+            /* Put the player at a location */
+            /* For now put him in the middle of the screen */
+            theGame.playerPosX = DEFAULT_HEIGHT / 2;
+            theGame.playerPosX = DEFAULT_WIDTH / 2;
+
             /* Main loop flag */
             bool quit = false;
 
@@ -338,7 +346,7 @@ int main( int argc, char* args[])
                 }
 
                 /* Clear screen */
-                SDL_SetRenderDrawColor( theGame.renderer, 0xFF, 0xFF, 0xFF, 0xFF );
+                SDL_SetRenderDrawColor( theGame.renderer, 0x7F, 0x7F, 0x7F, 0x7F );
                 SDL_RenderClear( theGame.renderer );
 
                 /* Render console to screen */
