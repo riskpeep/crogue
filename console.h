@@ -70,6 +70,12 @@ const uint16_t rk_console_width( rk_console_t *console );
  */
 rk_tile_t* rk_console_tiles( rk_console_t *console );
 
+/* Clears the console and fills it with the given character
+ *
+ * @return Success
+ */
+bool rk_console_clear( rk_console_t *console, const char clearChar );
+
 /* Writes text on the console
  *
  * @return Success

@@ -13,11 +13,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "game.h"
+#include "game_state.h"
 
 /*****************************************************************************
  * Utility Methods
  *****************************************************************************/
-bool cr_dummy_data( cr_game_t* theGame );
+bool cr_dummy_data( rk_console_t* theConsole );
 
 #endif /* !RK_UTIL_H */

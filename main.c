@@ -11,25 +11,16 @@
 #include <stdint.h>   /* For uintxx_t types */
 
 #include "constants.h"
-#include "game.h"
+#include "game_state.h"
 #include "console.h"
 #include "texture.h"
 #include "util.h"
 
-/* Screen dimension constants 
- */
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-
-/* Console dimension constants
- */
-const uint16_t DEFAULT_HEIGHT = 24;
-const uint16_t DEFAULT_WIDTH = 80;
-
 /* Tileset defaults
  */
 const int TILE_SIZE = 16;
-const char TILE_SET[] = "assets/Spacefox_16x16.png";
+/*const char TILE_SET[] = "assets/Spacefox_16x16.png"; */
+const char TILE_SET[] = "assets/Bisasam_16x16.png";
 const char TILE_SET_GLYPHS_WIDE = 16;
 const char TILE_SET_GLYPHS_HIGH = 16;
 
@@ -260,37 +251,43 @@ void cr_render_console( cr_game_t *theGame ) {
 int main( int argc, char* args[])
 {
     /* Create our game object */
-    cr_game_t theGame;
+    cr_game_t *theGame = cr_game_init();
+    if( theGame == NULL ) {
+        /* Can't create our game object */
+        /* Error out */
+        return -1;
+    }
 
     /* Initialize the game */
-    theGame.window = NULL;
-    theGame.isMinimized = false;
-    theGame.isMaximized = false;
-    theGame.hasFocus = true;
-    theGame.wHeight = SCREEN_HEIGHT;
-    theGame.wWidth = SCREEN_WIDTH;
+    /*    theGame->window = NULL;
+          theGame->isMinimized = false;
+          theGame->isMaximized = false;
+          theGame->hasFocus = true;
+          theGame->wHeight = SCREEN_HEIGHT;
+          theGame->wWidth = SCREEN_WIDTH;
 
-    theGame.screenSurface = NULL;
-    theGame.tileSet = NULL;
-    theGame.console = NULL;
+          theGame->screenSurface = NULL;
+          theGame->tileSet = NULL;
+          theGame.console = NULL;
+          */
 
     /* Start up SDL and create window */
-    if( !cr_init( &theGame ) ) {
+    if( !cr_init( theGame ) ) {
         printf( "Failed to initialize!\n" );
     } else {
         /* Load media */
-        if( !cr_loadMedia( &theGame ) ) {
+        if( !cr_loadMedia( theGame ) ) {
             printf( "Failed to load media!\n" );
         } else {
             /* Make some dummy data */
-            cr_dummy_data( &theGame );
+            cr_dummy_data( theGame->console );
 
-            rk_console_write( theGame.console, 2, 2, CR_WELCOME_MESSAGE );
+            rk_console_write( theGame->console, 2, 2, CR_WELCOME_MESSAGE );
 
             /* Put the player at a location */
             /* For now put him in the middle of the screen */
-            theGame.playerPosX = DEFAULT_HEIGHT / 2;
-            theGame.playerPosX = DEFAULT_WIDTH / 2;
+            theGame->playerPosX = DEFAULT_HEIGHT / 2;
+            theGame->playerPosX = DEFAULT_WIDTH / 2;
 
             /* Main loop flag */
             bool quit = false;
@@ -313,53 +310,61 @@ int main( int argc, char* args[])
                             switch( e.window.event ) {
                                 /* Resize canvas on resize */
                                 case SDL_WINDOWEVENT_SIZE_CHANGED:
-                                    theGame.wWidth = e.window.data1;
-                                    theGame.wHeight = e.window.data2;
+                                    theGame->wWidth = e.window.data1;
+                                    theGame->wHeight = e.window.data2;
                                     /* TODO Get new size */
-                                    SDL_RenderPresent( theGame.renderer );
+                                    SDL_RenderPresent( theGame->renderer );
                                     break;
 
-                                /* Repaint on exposure */
+                                    /* Repaint on exposure */
                                 case SDL_WINDOWEVENT_EXPOSED:
-                                    SDL_RenderPresent( theGame.renderer );
+                                    SDL_RenderPresent( theGame->renderer );
                                     break;
 
-                                /* Window Minimized */
+                                    /* Window Minimized */
                                 case SDL_WINDOWEVENT_MINIMIZED:
                                     /* TODO */
                                     break;
 
-                                /* Window Maximized */
+                                    /* Window Maximized */
                                 case SDL_WINDOWEVENT_MAXIMIZED:
                                     /* TODO Get new size */
-                                    SDL_RenderPresent( theGame.renderer );
+                                    SDL_RenderPresent( theGame->renderer );
                                     break;
 
-                                /* Window Restored */
+                                    /* Window Restored */
                                 case SDL_WINDOWEVENT_RESTORED:
                                     /* TODO Get new size */
-                                    SDL_RenderPresent( theGame.renderer );
+                                    SDL_RenderPresent( theGame->renderer );
                                     break;
                             }
+                            break;
+
+                        case SDL_KEYDOWN:
+                            theGame->respondToUserInput(theGame, e.key );
                             break;
                     }
                 }
 
                 /* Clear screen */
-                SDL_SetRenderDrawColor( theGame.renderer, 0x7F, 0x7F, 0x7F, 0x7F );
-                SDL_RenderClear( theGame.renderer );
+                SDL_SetRenderDrawColor( theGame->renderer, 0x7F, 0x7F, 0x7F, 0x7F );
+                SDL_RenderClear( theGame->renderer );
+
+                /* Draw output to console */
+                theGame->displayOutput( theGame->console );
 
                 /* Render console to screen */
-                cr_render_console( &theGame );
-
+                cr_render_console( theGame );
+ 
                 /* Update screen */
-                SDL_RenderPresent( theGame.renderer );
+                SDL_RenderPresent( theGame->renderer );
             }
         }
     }
 
     /* Free resources and close SDL */
-    cr_close( &theGame );
+    cr_close( theGame );
+    cr_game_destroy( &theGame );
 
     return 0;
 }

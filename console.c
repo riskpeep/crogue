@@ -94,6 +94,19 @@ rk_tile_t* rk_console_tiles( rk_console_t *console ) {
     return console->tileArray;
 }
 
+/* Clears the console and fills it with the given character
+ */
+bool rk_console_clear( rk_console_t *console, const char clearChar ) {
+    uint16_t tileIter = 0;
+
+    /* Iterate all the glyphs and set to clearChar */
+    for( tileIter = 0; tileIter < ( console->width * console->height ); tileIter++ ) {
+        console->tileArray[ tileIter ].glyph = clearChar;
+    }
+
+    return true;
+}
+
 /* Writes text on the console
  */
 bool rk_console_write( rk_console_t* console, const uint16_t posX, const uint16_t posY, const char *textString ) {

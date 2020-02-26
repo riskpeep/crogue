@@ -1,5 +1,5 @@
-#OBJS specifies which files to compile as part of the project
-OBJS = main.c console.c texture.c util.c
+#SRC specifies which files to compile as part of the project
+SRC = $(wildcard *.c)
 
 #CC specifies which compiler we'll be using
 CC = gcc
@@ -16,5 +16,5 @@ LINKER_FLAGS = -lSDL2 -lSDL2_image
 OBJ_NAME = crogue
 
 #This is the target that compiles our executable
-all: $(OBJS)
-	$(CC) $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+all: $(SRC)
+	$(CC) $(SRC) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)

@@ -73,7 +73,7 @@ bool rk_texture_loadFromFile( rk_texture_t *theTexture, SDL_Renderer *theRendere
     /* Load image at specified path */
     loadedSurface = IMG_Load( path );
     if( loadedSurface == NULL ) {
-        printf( "Unable to load image %s! SDL_image Error: %s\n", path, IMG_GetError() );
+        printf( "Unable to load texture image %s! SDL_image Error: %s\n", path, IMG_GetError() );
     } else {
         if( loadedSurface->h > RK_TEXTURE_MAX_HEIGHT || loadedSurface->w > RK_TEXTURE_MAX_WIDTH ) {
             printf( "Texture dimensions greater than max size of %u x %u!\n", RK_TEXTURE_MAX_HEIGHT, RK_TEXTURE_MAX_WIDTH );
